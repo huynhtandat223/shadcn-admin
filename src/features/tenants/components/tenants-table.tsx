@@ -1,19 +1,19 @@
-import {useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import axios from 'axios'
 import {
   ColumnDef,
   ColumnFiltersState,
-  RowData,
   SortingState,
   VisibilityState,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import buildQuery from 'odata-query'
 import {
   Table,
   TableBody,
@@ -22,28 +22,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ODataQueryWithCount } from '..'
 import { Tenant } from '../data/schema'
 import { DataTablePagination } from './data-table-pagination'
 import { DataTableToolbar } from './data-table-toolbar'
-import { ODataQueryWithCount } from '..'
-import axios from 'axios'
-import { useQuery } from '@tanstack/react-query'
-
-declare module '@tanstack/react-table' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
-    className: string
-  }
-}
 
 interface DataTableProps {
   columns: ColumnDef<Tenant>[]
-}
-
-const fetchData = async (query) => {
-  console.log('query', query)
-  const { data } = await axios.get('http://localhost:5002/odata-api/tenants')
-  return data
 }
 
 export function TenantsTable({ columns }: DataTableProps) {
@@ -52,24 +37,35 @@ export function TenantsTable({ columns }: DataTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
 
-  const query = useMemo(() => {
-    return {
-      $top: 10,
-      $skip: 0,
-      $count: true,
-      $orderby: sorting.length > 0 ? sorting.map((s) => `${s.id} ${s.desc ? 'desc' : 'asc'}`).join(',') : undefined,
-    }
-  }, [sorting])
+  const [globalFilter, setGlobalFilter] = useState<string>('')
 
-  const { data  } = useQuery<ODataQueryWithCount<Tenant>>({
-    queryKey: [query],
-    queryFn: fetchData,
-})
+  const [data, setData] = useState<ODataQueryWithCount<Tenant>>({
+    totalCount: 0,
+    value: [],
+  })
+
+  const fetch = useCallback(async () => {
+    const orderBy =
+      sorting.length > 0
+        ? sorting.map((s) => `${s.id} ${s.desc ? 'desc' : ''}`).join(',')
+        : ''
+    const odataQuery = {
+      orderBy: [orderBy],
+      search: globalFilter || undefined,
+    }
+
+    const query = buildQuery(odataQuery)
+
+    const { data } = await axios.get(
+      `http://localhost:5002/odata-api/tenants${query}`
+    )
+    setData(data)
+  }, [sorting, globalFilter])
 
   useEffect(() => {
+    fetch()
+  }, [fetch])
 
-  }, [sorting])
-  
   const table = useReactTable({
     data: data?.value || [],
     columns,
@@ -78,14 +74,17 @@ export function TenantsTable({ columns }: DataTableProps) {
       columnVisibility,
       rowSelection,
       columnFilters,
+      globalFilter,
     },
+    onGlobalFilterChange: setGlobalFilter,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    manualFiltering: true,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    // getFilteredRowModel: getFilteredRowModel(), // not needed for manual server-side global filtering
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
@@ -94,7 +93,7 @@ export function TenantsTable({ columns }: DataTableProps) {
 
   return (
     <div className='space-y-4'>
-      <DataTableToolbar table={table} />
+      <DataTableToolbar table={table} globalFilter={globalFilter} />
       <div className='rounded-md border'>
         <Table>
           <TableHeader>

@@ -15,6 +15,7 @@ export type ODataQueryWithCount<T> = {
 }
 
 export default function Tenants() {
+
   return (
     <TenantsProvider>
       <Header fixed>
