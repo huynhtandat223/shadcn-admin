@@ -9,7 +9,6 @@ import {
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
@@ -39,6 +38,11 @@ export function TenantsTable({ columns }: DataTableProps) {
 
   const [globalFilter, setGlobalFilter] = useState<string>('')
 
+  const [pagination, setPagination] = useState({
+    pageIndex: 0, //initial page index
+    pageSize: 10, //default page size
+  })
+
   const [data, setData] = useState<ODataQueryWithCount<Tenant>>({
     totalCount: 0,
     value: [],
@@ -49,9 +53,14 @@ export function TenantsTable({ columns }: DataTableProps) {
       sorting.length > 0
         ? sorting.map((s) => `${s.id} ${s.desc ? 'desc' : ''}`).join(',')
         : ''
+    const top = pagination.pageSize
+    const skip = pagination.pageIndex * pagination.pageSize
+
     const odataQuery = {
       orderBy: [orderBy],
       search: globalFilter || undefined,
+      top,
+      skip,
     }
 
     const query = buildQuery(odataQuery)
@@ -60,7 +69,7 @@ export function TenantsTable({ columns }: DataTableProps) {
       `http://localhost:5002/odata-api/tenants${query}`
     )
     setData(data)
-  }, [sorting, globalFilter])
+  }, [sorting, globalFilter, pagination])
 
   useEffect(() => {
     fetch()
@@ -75,17 +84,21 @@ export function TenantsTable({ columns }: DataTableProps) {
       rowSelection,
       columnFilters,
       globalFilter,
+      pagination,
     },
+    onPaginationChange: setPagination,
     onGlobalFilterChange: setGlobalFilter,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     manualFiltering: true,
+    manualPagination: true,
+    rowCount: data.totalCount,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     // getFilteredRowModel: getFilteredRowModel(), // not needed for manual server-side global filtering
-    getPaginationRowModel: getPaginationRowModel(),
+    // getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),

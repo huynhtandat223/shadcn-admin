@@ -7,19 +7,19 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { User } from '../data/schema'
+import { Tenant } from '../data/schema'
 
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  currentRow: User
+  currentRow: Tenant
 }
 
-export function UsersDeleteDialog({ open, onOpenChange, currentRow }: Props) {
+export function TenantsDeleteDialog({ open, onOpenChange, currentRow }: Props) {
   const [value, setValue] = useState('')
 
   const handleDelete = () => {
-    if (value.trim() !== currentRow.username) return
+    if (value.trim() !== currentRow.name) return
 
     onOpenChange(false)
     toast({
@@ -39,7 +39,7 @@ export function UsersDeleteDialog({ open, onOpenChange, currentRow }: Props) {
       open={open}
       onOpenChange={onOpenChange}
       handleConfirm={handleDelete}
-      disabled={value.trim() !== currentRow.username}
+      disabled={value.trim() !== currentRow.name}
       title={
         <span className='text-destructive'>
           <IconAlertTriangle
@@ -53,11 +53,11 @@ export function UsersDeleteDialog({ open, onOpenChange, currentRow }: Props) {
         <div className='space-y-4'>
           <p className='mb-2'>
             Are you sure you want to delete{' '}
-            <span className='font-bold'>{currentRow.username}</span>?
+            <span className='font-bold'>{currentRow.name}</span>?
             <br />
             This action will permanently remove the user with the role of{' '}
             <span className='font-bold'>
-              {currentRow.role.toUpperCase()}
+              {currentRow.name.toUpperCase()}
             </span>{' '}
             from the system. This cannot be undone.
           </p>

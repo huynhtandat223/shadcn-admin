@@ -11,30 +11,30 @@ interface UsersContextType {
   setCurrentRow: React.Dispatch<React.SetStateAction<Tenant | null>>
 }
 
-const UsersContext = React.createContext<UsersContextType | null>(null)
+const Context = React.createContext<UsersContextType | null>(null)
 
 interface Props {
   children: React.ReactNode
 }
 
-export default function UsersProvider({ children }: Props) {
+export default function TenantsProvider({ children }: Props) {
   const [open, setOpen] = useDialogState<UsersDialogType>(null)
   const [currentRow, setCurrentRow] = useState<Tenant | null>(null)
 
   return (
-    <UsersContext value={{ open, setOpen, currentRow, setCurrentRow }}>
+    <Context value={{ open, setOpen, currentRow, setCurrentRow }}>
       {children}
-    </UsersContext>
+    </Context>
   )
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useUsers = () => {
-  const usersContext = React.useContext(UsersContext)
+export const useTenants = () => {
+  const context = React.useContext(Context)
 
-  if (!usersContext) {
+  if (!context) {
     throw new Error('useUsers has to be used within <UsersContext>')
   }
 
-  return usersContext
+  return context
 }

@@ -23,102 +23,42 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { PasswordInput } from '@/components/password-input'
 import { SelectDropdown } from '@/components/select-dropdown'
-import { userTypes } from '../data/data'
-import { User } from '../data/schema'
+import { tenantTypes } from '../data/data'
+import { Tenant, tenantTypeSchema } from '../data/schema'
 
-const formSchema = z
-  .object({
-    firstName: z.string().min(1, { message: 'First Name is required.' }),
-    lastName: z.string().min(1, { message: 'Last Name is required.' }),
-    username: z.string().min(1, { message: 'Username is required.' }),
-    phoneNumber: z.string().min(1, { message: 'Phone number is required.' }),
-    email: z
-      .string()
-      .min(1, { message: 'Email is required.' })
-      .email({ message: 'Email is invalid.' }),
-    password: z.string().transform((pwd) => pwd.trim()),
-    role: z.string().min(1, { message: 'Role is required.' }),
-    confirmPassword: z.string().transform((pwd) => pwd.trim()),
-    isEdit: z.boolean(),
-  })
-  .superRefine(({ isEdit, password, confirmPassword }, ctx) => {
-    if (!isEdit || (isEdit && password !== '')) {
-      if (password === '') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Password is required.',
-          path: ['password'],
-        })
-      }
-
-      if (password.length < 8) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Password must be at least 8 characters long.',
-          path: ['password'],
-        })
-      }
-
-      if (!password.match(/[a-z]/)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Password must contain at least one lowercase letter.',
-          path: ['password'],
-        })
-      }
-
-      if (!password.match(/\d/)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Password must contain at least one number.',
-          path: ['password'],
-        })
-      }
-
-      if (password !== confirmPassword) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Passwords don't match.",
-          path: ['confirmPassword'],
-        })
-      }
-    }
-  })
-type UserForm = z.infer<typeof formSchema>
+const formSchema = z.object({
+  name: z.string().min(1, { message: 'Name is required.' }),
+  displayName: z.string().min(1, { message: 'Display name is required.' }),
+  tenantType: tenantTypeSchema,
+})
+type TenantForm = z.infer<typeof formSchema>
 
 interface Props {
-  currentRow?: User
+  currentRow?: Tenant
   open: boolean
   onOpenChange: (open: boolean) => void
+  onExternalSubmit: (values: TenantForm) => void
 }
 
-export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
+export function TenantsActionDialog({
+  currentRow,
+  open,
+  onOpenChange,
+  onExternalSubmit,
+}: Props) {
   const isEdit = !!currentRow
-  const form = useForm<UserForm>({
+  const form = useForm<TenantForm>({
     resolver: zodResolver(formSchema),
-    defaultValues: isEdit
-      ? {
-          ...currentRow,
-          password: '',
-          confirmPassword: '',
-          isEdit,
-        }
-      : {
-          firstName: '',
-          lastName: '',
-          username: '',
-          email: '',
-          role: '',
-          phoneNumber: '',
-          password: '',
-          confirmPassword: '',
-          isEdit,
-        },
+    defaultValues: {
+      name: currentRow?.name ?? '',
+      displayName: currentRow?.displayName ?? '',
+      tenantType: currentRow?.tenantType ?? 'organization',
+    },
   })
 
-  const onSubmit = (values: UserForm) => {
+  const onSubmit = (values: TenantForm) => {
+    onExternalSubmit(values)
     form.reset()
     toast({
       title: 'You submitted the following values:',
@@ -130,8 +70,6 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
     })
     onOpenChange(false)
   }
-
-  const isPasswordTouched = !!form.formState.dirtyFields.password
 
   return (
     <Dialog
@@ -158,7 +96,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
             >
               <FormField
                 control={form.control}
-                name='firstName'
+                name='name'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
                     <FormLabel className='col-span-2 text-right'>
@@ -178,7 +116,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               />
               <FormField
                 control={form.control}
-                name='lastName'
+                name='displayName'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
                     <FormLabel className='col-span-2 text-right'>
@@ -198,64 +136,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               />
               <FormField
                 control={form.control}
-                name='username'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Username
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='john_doe'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='email'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Email
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='john.doe@gmail.com'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='phoneNumber'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Phone Number
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='+123456789'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='role'
+                name='tenantType'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
                     <FormLabel className='col-span-2 text-right'>
@@ -266,50 +147,11 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                       onValueChange={field.onChange}
                       placeholder='Select a role'
                       className='col-span-4'
-                      items={userTypes.map(({ label, value }) => ({
+                      items={tenantTypes.map(({ label, value }) => ({
                         label,
                         value,
                       }))}
                     />
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='password'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Password
-                    </FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder='e.g., S3cur3P@ssw0rd'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='confirmPassword'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Confirm Password
-                    </FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        disabled={!isPasswordTouched}
-                        placeholder='e.g., S3cur3P@ssw0rd'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
                     <FormMessage className='col-span-4 col-start-3' />
                   </FormItem>
                 )}
