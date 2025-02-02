@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { ColumnDef } from '@tanstack/react-table'
 import { IconUserPlus } from '@tabler/icons-react'
+import { useAuth } from '@/stores/authStore'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -87,11 +88,16 @@ const columns: ColumnDef<Tenant>[] = [
 
 export function UsersDialogs() {
   const { open, setOpen, currentRow, setCurrentRow } = useTenants()
+  const { accessToken } = useAuth()
   return (
     <>
       <TenantsActionDialog
         onExternalSubmit={async (values) => {
-          await axios.post(`http://localhost:5002/odata-api/tenants`, values)
+          await axios.post(`http://localhost:5002/odata-api/tenants`, values, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          })
         }}
         key='user-add'
         open={open === 'add'}

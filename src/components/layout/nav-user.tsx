@@ -7,6 +7,7 @@ import {
   LogOut,
   Sparkles,
 } from 'lucide-react'
+import { useAuth } from '@/stores/authStore'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -34,6 +35,7 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const { setAccessToken } = useAuth()
 
   return (
     <SidebarMenu>
@@ -102,7 +104,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setAccessToken('')}>
               <LogOut />
               Log out
             </DropdownMenuItem>

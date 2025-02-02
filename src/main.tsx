@@ -12,7 +12,6 @@ import { handleServerError } from '@/utils/handle-server-error'
 import { toast } from '@/hooks/use-toast'
 import { ThemeProvider } from './context/theme-context'
 import './index.css'
-// Generated Routes
 import { routeTree } from './routeTree.gen'
 
 const queryClient = new QueryClient({

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
+import { useQuery } from '@tanstack/react-query'
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -13,6 +14,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import buildQuery from 'odata-query'
+import { useAuth } from '@/stores/authStore'
 import {
   Table,
   TableBody,
@@ -35,48 +37,50 @@ export function TenantsTable({ columns }: DataTableProps) {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
+  const { accessToken } = useAuth()
 
   const [globalFilter, setGlobalFilter] = useState<string>('')
 
   const [pagination, setPagination] = useState({
-    pageIndex: 0, //initial page index
-    pageSize: 10, //default page size
+    pageIndex: 0,
+    pageSize: 10,
   })
 
-  const [data, setData] = useState<ODataQueryWithCount<Tenant>>({
-    totalCount: 0,
-    value: [],
+  const { data } = useQuery({
+    queryKey: ['tenants', sorting, globalFilter, pagination, accessToken],
+    queryFn: async () => {
+      const orderBy =
+        sorting.length > 0
+          ? sorting.map((s) => `${s.id} ${s.desc ? 'desc' : ''}`).join(',')
+          : ''
+      const top = pagination.pageSize
+      const skip = pagination.pageIndex * pagination.pageSize
+
+      const odataQuery = {
+        orderBy: [orderBy],
+        search: globalFilter || undefined,
+        top,
+        skip,
+      }
+
+      const query = buildQuery(odataQuery)
+
+      const { data } = await axios.get<ODataQueryWithCount<Tenant>>(
+        `http://localhost:5002/odata-api/tenants${query}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      )
+      return data
+    },
+    initialData: { value: [], totalCount: 0 },
+    staleTime: 0,
   })
-
-  const fetch = useCallback(async () => {
-    const orderBy =
-      sorting.length > 0
-        ? sorting.map((s) => `${s.id} ${s.desc ? 'desc' : ''}`).join(',')
-        : ''
-    const top = pagination.pageSize
-    const skip = pagination.pageIndex * pagination.pageSize
-
-    const odataQuery = {
-      orderBy: [orderBy],
-      search: globalFilter || undefined,
-      top,
-      skip,
-    }
-
-    const query = buildQuery(odataQuery)
-
-    const { data } = await axios.get(
-      `http://localhost:5002/odata-api/tenants${query}`
-    )
-    setData(data)
-  }, [sorting, globalFilter, pagination])
-
-  useEffect(() => {
-    fetch()
-  }, [fetch])
 
   const table = useReactTable({
-    data: data?.value || [],
+    data: data.value || [],
     columns,
     state: {
       sorting,

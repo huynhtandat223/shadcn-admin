@@ -1,10 +1,13 @@
 import { HTMLAttributes, useState } from 'react'
 import { z } from 'zod'
+import axios from 'axios'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react'
+import { useAuth } from '@/stores/authStore'
 import { cn } from '@/lib/utils'
+import { toast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -16,6 +19,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
+import { AuthResponse, LoginRequest, User } from '../../types'
 
 type UserAuthFormProps = HTMLAttributes<HTMLDivElement>
 
@@ -34,25 +38,76 @@ const formSchema = z.object({
     }),
 })
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002'
+
+async function login(credentials: LoginRequest): Promise<AuthResponse> {
+  const response = await fetch(`${API_URL}/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(credentials),
+  })
+
+  if (!response.ok) {
+    throw new Error('Login failed')
+  }
+
+  return response.json()
+}
+
+async function getCurrentUser(token: string): Promise<User> {
+  const response = await axios.get<User>(`${API_URL}/manage/info`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (response.status !== 200) {
+    throw new Error('Failed to get user')
+  }
+
+  return response.data
+}
+
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const { setAccessToken, setUser } = useAuth()
+  const navigate = useNavigate()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'admin@gmail.com',
+      password: '123!@#abcABC',
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
-    // eslint-disable-next-line no-console
-    console.log(data)
+    try {
+      const loginResult = await login(data)
+      if (loginResult && loginResult.accessToken) {
+        setAccessToken(loginResult.accessToken)
 
-    setTimeout(() => {
+        const user = await getCurrentUser(loginResult.accessToken)
+        setUser(user)
+
+        const redirect = new URLSearchParams(window.location.search).get(
+          'redirect'
+        )
+        navigate({ to: redirect || '/' })
+      }
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Login failed!',
+        description: JSON.stringify(err),
+      })
+    } finally {
       setIsLoading(false)
-    }, 3000)
+    }
   }
 
   return (
