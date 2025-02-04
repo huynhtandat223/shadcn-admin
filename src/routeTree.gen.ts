@@ -37,9 +37,6 @@ const AuthenticatedSettingsRouteLazyImport = createFileRoute(
 const AuthenticatedUsersIndexLazyImport = createFileRoute(
   '/_authenticated/users/',
 )()
-const AuthenticatedTenantsIndexLazyImport = createFileRoute(
-  '/_authenticated/tenants/',
-)()
 const AuthenticatedTasksIndexLazyImport = createFileRoute(
   '/_authenticated/tasks/',
 )()
@@ -66,6 +63,9 @@ const AuthenticatedSettingsAppearanceLazyImport = createFileRoute(
 )()
 const AuthenticatedSettingsAccountLazyImport = createFileRoute(
   '/_authenticated/settings/account',
+)()
+const AuthenticatedEntitiesEntityLazyImport = createFileRoute(
+  '/_authenticated/entities/$entity',
 )()
 
 // Create/Update Routes
@@ -183,15 +183,6 @@ const AuthenticatedUsersIndexLazyRoute =
     import('./routes/_authenticated/users/index.lazy').then((d) => d.Route),
   )
 
-const AuthenticatedTenantsIndexLazyRoute =
-  AuthenticatedTenantsIndexLazyImport.update({
-    id: '/tenants/',
-    path: '/tenants/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/tenants/index.lazy').then((d) => d.Route),
-  )
-
 const AuthenticatedTasksIndexLazyRoute =
   AuthenticatedTasksIndexLazyImport.update({
     id: '/tasks/',
@@ -280,6 +271,17 @@ const AuthenticatedSettingsAccountLazyRoute =
     getParentRoute: () => AuthenticatedSettingsRouteLazyRoute,
   } as any).lazy(() =>
     import('./routes/_authenticated/settings/account.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+
+const AuthenticatedEntitiesEntityLazyRoute =
+  AuthenticatedEntitiesEntityLazyImport.update({
+    id: '/entities/$entity',
+    path: '/entities/$entity',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/entities/$entity.lazy').then(
       (d) => d.Route,
     ),
   )
@@ -386,6 +388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexImport
       parentRoute: typeof AuthenticatedRouteImport
     }
+    '/_authenticated/entities/$entity': {
+      id: '/_authenticated/entities/$entity'
+      path: '/entities/$entity'
+      fullPath: '/entities/$entity'
+      preLoaderRoute: typeof AuthenticatedEntitiesEntityLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
     '/_authenticated/settings/account': {
       id: '/_authenticated/settings/account'
       path: '/account'
@@ -449,13 +458,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTasksIndexLazyImport
       parentRoute: typeof AuthenticatedRouteImport
     }
-    '/_authenticated/tenants/': {
-      id: '/_authenticated/tenants/'
-      path: '/tenants'
-      fullPath: '/tenants'
-      preLoaderRoute: typeof AuthenticatedTenantsIndexLazyImport
-      parentRoute: typeof AuthenticatedRouteImport
-    }
     '/_authenticated/users/': {
       id: '/_authenticated/users/'
       path: '/users'
@@ -497,11 +499,11 @@ const AuthenticatedSettingsRouteLazyRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteLazyRoute: typeof AuthenticatedSettingsRouteLazyRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedEntitiesEntityLazyRoute: typeof AuthenticatedEntitiesEntityLazyRoute
   AuthenticatedAppsIndexLazyRoute: typeof AuthenticatedAppsIndexLazyRoute
   AuthenticatedChatsIndexLazyRoute: typeof AuthenticatedChatsIndexLazyRoute
   AuthenticatedHelpCenterIndexLazyRoute: typeof AuthenticatedHelpCenterIndexLazyRoute
   AuthenticatedTasksIndexLazyRoute: typeof AuthenticatedTasksIndexLazyRoute
-  AuthenticatedTenantsIndexLazyRoute: typeof AuthenticatedTenantsIndexLazyRoute
   AuthenticatedUsersIndexLazyRoute: typeof AuthenticatedUsersIndexLazyRoute
 }
 
@@ -509,11 +511,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteLazyRoute:
     AuthenticatedSettingsRouteLazyRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedEntitiesEntityLazyRoute: AuthenticatedEntitiesEntityLazyRoute,
   AuthenticatedAppsIndexLazyRoute: AuthenticatedAppsIndexLazyRoute,
   AuthenticatedChatsIndexLazyRoute: AuthenticatedChatsIndexLazyRoute,
   AuthenticatedHelpCenterIndexLazyRoute: AuthenticatedHelpCenterIndexLazyRoute,
   AuthenticatedTasksIndexLazyRoute: AuthenticatedTasksIndexLazyRoute,
-  AuthenticatedTenantsIndexLazyRoute: AuthenticatedTenantsIndexLazyRoute,
   AuthenticatedUsersIndexLazyRoute: AuthenticatedUsersIndexLazyRoute,
 }
 
@@ -534,6 +536,7 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404LazyRoute
   '/503': typeof errors503LazyRoute
   '/': typeof AuthenticatedIndexRoute
+  '/entities/$entity': typeof AuthenticatedEntitiesEntityLazyRoute
   '/settings/account': typeof AuthenticatedSettingsAccountLazyRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceLazyRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayLazyRoute
@@ -543,7 +546,6 @@ export interface FileRoutesByFullPath {
   '/help-center': typeof AuthenticatedHelpCenterIndexLazyRoute
   '/settings/': typeof AuthenticatedSettingsIndexLazyRoute
   '/tasks': typeof AuthenticatedTasksIndexLazyRoute
-  '/tenants': typeof AuthenticatedTenantsIndexLazyRoute
   '/users': typeof AuthenticatedUsersIndexLazyRoute
 }
 
@@ -559,6 +561,7 @@ export interface FileRoutesByTo {
   '/404': typeof errors404LazyRoute
   '/503': typeof errors503LazyRoute
   '/': typeof AuthenticatedIndexRoute
+  '/entities/$entity': typeof AuthenticatedEntitiesEntityLazyRoute
   '/settings/account': typeof AuthenticatedSettingsAccountLazyRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceLazyRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayLazyRoute
@@ -568,7 +571,6 @@ export interface FileRoutesByTo {
   '/help-center': typeof AuthenticatedHelpCenterIndexLazyRoute
   '/settings': typeof AuthenticatedSettingsIndexLazyRoute
   '/tasks': typeof AuthenticatedTasksIndexLazyRoute
-  '/tenants': typeof AuthenticatedTenantsIndexLazyRoute
   '/users': typeof AuthenticatedUsersIndexLazyRoute
 }
 
@@ -588,6 +590,7 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500LazyRoute
   '/(errors)/503': typeof errors503LazyRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/entities/$entity': typeof AuthenticatedEntitiesEntityLazyRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountLazyRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceLazyRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayLazyRoute
@@ -597,7 +600,6 @@ export interface FileRoutesById {
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexLazyRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexLazyRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexLazyRoute
-  '/_authenticated/tenants/': typeof AuthenticatedTenantsIndexLazyRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexLazyRoute
 }
 
@@ -617,6 +619,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/503'
     | '/'
+    | '/entities/$entity'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -626,7 +629,6 @@ export interface FileRouteTypes {
     | '/help-center'
     | '/settings/'
     | '/tasks'
-    | '/tenants'
     | '/users'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -641,6 +643,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/503'
     | '/'
+    | '/entities/$entity'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -650,7 +653,6 @@ export interface FileRouteTypes {
     | '/help-center'
     | '/settings'
     | '/tasks'
-    | '/tenants'
     | '/users'
   id:
     | '__root__'
@@ -668,6 +670,7 @@ export interface FileRouteTypes {
     | '/(errors)/500'
     | '/(errors)/503'
     | '/_authenticated/'
+    | '/_authenticated/entities/$entity'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
@@ -677,7 +680,6 @@ export interface FileRouteTypes {
     | '/_authenticated/help-center/'
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
-    | '/_authenticated/tenants/'
     | '/_authenticated/users/'
   fileRoutesById: FileRoutesById
 }
@@ -741,11 +743,11 @@ export const routeTree = rootRoute
       "children": [
         "/_authenticated/settings",
         "/_authenticated/",
+        "/_authenticated/entities/$entity",
         "/_authenticated/apps/",
         "/_authenticated/chats/",
         "/_authenticated/help-center/",
         "/_authenticated/tasks/",
-        "/_authenticated/tenants/",
         "/_authenticated/users/"
       ]
     },
@@ -797,6 +799,10 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/index.tsx",
       "parent": "/_authenticated"
     },
+    "/_authenticated/entities/$entity": {
+      "filePath": "_authenticated/entities/$entity.lazy.tsx",
+      "parent": "/_authenticated"
+    },
     "/_authenticated/settings/account": {
       "filePath": "_authenticated/settings/account.lazy.tsx",
       "parent": "/_authenticated/settings"
@@ -831,10 +837,6 @@ export const routeTree = rootRoute
     },
     "/_authenticated/tasks/": {
       "filePath": "_authenticated/tasks/index.lazy.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/tenants/": {
-      "filePath": "_authenticated/tenants/index.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/users/": {

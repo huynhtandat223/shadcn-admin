@@ -134,7 +134,11 @@ export function UsersPrimaryButtons() {
   )
 }
 
-export default function Tenants() {
+interface EntityListProps {
+  entityName: string
+}
+
+export default function EntityList({ entityName }: EntityListProps) {
   return (
     <TenantsProvider>
       <Header fixed>
