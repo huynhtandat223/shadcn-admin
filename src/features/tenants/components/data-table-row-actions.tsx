@@ -10,7 +10,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useTenants } from '../context/tenants-context'
 import { Tenant } from '../data/schema'
 
 interface DataTableRowActionsProps {
@@ -18,7 +17,11 @@ interface DataTableRowActionsProps {
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
-  const { setOpen, setCurrentRow } = useTenants()
+  // const { setOpen, setCurrentRow } = useEntity()
+  const { setOpen, setCurrentRow } = {
+    setOpen: () => {},
+    setCurrentRow: () => {},
+  }
   return (
     <>
       <DropdownMenu modal={false}>

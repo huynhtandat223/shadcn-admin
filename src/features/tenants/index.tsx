@@ -1,7 +1,5 @@
-import axios from 'axios'
 import { ColumnDef } from '@tanstack/react-table'
 import { IconUserPlus } from '@tabler/icons-react'
-import { useAuth } from '@/stores/authStore'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -13,10 +11,7 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { DataTableColumnHeader } from './components/data-table-column-header'
 import { DataTableRowActions } from './components/data-table-row-actions'
-import { TenantsDeleteDialog } from './components/tenants-delete-dialog'
 import { TenantsTable } from './components/tenants-table'
-import { TenantsActionDialog } from './components/users-action-dialog'
-import TenantsProvider, { useTenants } from './context/tenants-context'
 import { Tenant } from './data/schema'
 
 export type ODataQueryWithCount<T> = {
@@ -86,45 +81,45 @@ const columns: ColumnDef<Tenant>[] = [
   },
 ]
 
-export function UsersDialogs() {
-  const { open, setOpen, currentRow, setCurrentRow } = useTenants()
-  const { accessToken } = useAuth()
-  return (
-    <>
-      <TenantsActionDialog
-        onExternalSubmit={async (values) => {
-          await axios.post(`http://localhost:5002/odata-api/tenants`, values, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          })
-        }}
-        key='user-add'
-        open={open === 'add'}
-        onOpenChange={() => setOpen('add')}
-      />
+// export function UsersDialogs() {
+//   const { open, setOpen, currentRow, setCurrentRow } = useEntity()
+//   const { accessToken } = useAuth()
+//   return (
+//     <>
+//       <TenantsActionDialog
+//         onExternalSubmit={async (values) => {
+//           await axios.post(`http://localhost:5002/odata-api/tenants`, values, {
+//             headers: {
+//               Authorization: `Bearer ${accessToken}`,
+//             },
+//           })
+//         }}
+//         key='user-add'
+//         open={open === 'add'}
+//         onOpenChange={() => setOpen('add')}
+//       />
 
-      {currentRow && (
-        <>
-          <TenantsDeleteDialog
-            key={`user-delete-${currentRow.id}`}
-            open={open === 'delete'}
-            onOpenChange={() => {
-              setOpen('delete')
-              setTimeout(() => {
-                setCurrentRow(null)
-              }, 500)
-            }}
-            currentRow={currentRow}
-          />
-        </>
-      )}
-    </>
-  )
-}
+//       {currentRow && (
+//         <>
+//           <TenantsDeleteDialog
+//             key={`user-delete-${currentRow.id}`}
+//             open={open === 'delete'}
+//             onOpenChange={() => {
+//               setOpen('delete')
+//               setTimeout(() => {
+//                 setCurrentRow(null)
+//               }, 500)
+//             }}
+//             currentRow={currentRow}
+//           />
+//         </>
+//       )}
+//     </>
+//   )
+// }
 
 export function UsersPrimaryButtons() {
-  const { setOpen } = useTenants()
+  const { setOpen } = { setOpen: () => {} }
   return (
     <div className='flex gap-2'>
       <Button className='space-x-1' onClick={() => setOpen('add')}>
@@ -140,7 +135,7 @@ interface EntityListProps {
 
 export default function EntityList({ entityName }: EntityListProps) {
   return (
-    <TenantsProvider>
+    <>
       <Header fixed>
         <Search />
         <div className='ml-auto flex items-center space-x-4'>
@@ -164,7 +159,7 @@ export default function EntityList({ entityName }: EntityListProps) {
         </div>
       </Main>
 
-      <UsersDialogs />
-    </TenantsProvider>
+      {/* <UsersDialogs /> */}
+    </>
   )
 }
