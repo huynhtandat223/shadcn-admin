@@ -1,26 +1,26 @@
+import * as z from 'zod'
+import { useForm, useFormContext } from 'react-hook-form'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { FormField } from "@/components/ui/form";
-import { useForm, useFormContext } from "react-hook-form";
-import * as z from "zod";
-import { DEFAULT_ZOD_HANDLERS, INPUT_COMPONENTS } from "../config";
-import { Dependency, FieldConfig, FieldConfigItem } from "../types";
+} from '@/components/ui/accordion'
+import { FormField } from '@/components/ui/form'
+import { DEFAULT_ZOD_HANDLERS, INPUT_COMPONENTS } from '../config'
+import resolveDependencies from '../dependencies'
+import { Dependency, FieldConfig, FieldConfigItem } from '../types'
 import {
   beautifyObjectName,
   getBaseSchema,
   getBaseType,
   sortFieldsByOrder,
   zodToHtmlInputProps,
-} from "../utils";
-import AutoFormArray from "./array";
-import resolveDependencies from "../dependencies";
+} from '../utils'
+import AutoFormArray from './array'
 
 function DefaultParent({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <>{children}</>
 }
 
 export default function AutoFormObject<
@@ -32,63 +32,70 @@ export default function AutoFormObject<
   path = [],
   dependencies = [],
 }: {
-  schema: SchemaType | z.ZodEffects<SchemaType>;
-  form: ReturnType<typeof useForm>;
-  fieldConfig?: FieldConfig<z.infer<SchemaType>>;
-  path?: string[];
-  dependencies?: Dependency<z.infer<SchemaType>>[];
+  schema: SchemaType | z.ZodEffects<SchemaType>
+  form: ReturnType<typeof useForm>
+  fieldConfig?: FieldConfig<z.infer<SchemaType>>
+  path?: string[]
+  dependencies?: Dependency<z.infer<SchemaType>>[]
 }) {
-  const { watch } = useFormContext(); // Use useFormContext to access the watch function
+  const { watch } = useFormContext() // Use useFormContext to access the watch function
 
   if (!schema) {
-    return null;
+    return null
   }
-  const { shape } = getBaseSchema<SchemaType>(schema) || {};
+
+  let { shape } = getBaseSchema<SchemaType>(schema) || {}
+
+  if (schema._type) {
+    console.log(path)
+    const val = watch(`${path[0]}[${path[1]}].`)
+
+    shape = schema.getShape(val)
+  }
 
   if (!shape) {
-    return null;
+    return null
   }
 
   const handleIfZodNumber = (item: z.ZodAny) => {
-    const isZodNumber = (item as any)._def.typeName === "ZodNumber";
+    const isZodNumber = (item as any)._def.typeName === 'ZodNumber'
     const isInnerZodNumber =
-      (item._def as any).innerType?._def?.typeName === "ZodNumber";
+      (item._def as any).innerType?._def?.typeName === 'ZodNumber'
 
     if (isZodNumber) {
-      (item as any)._def.coerce = true;
+      ;(item as any)._def.coerce = true
     } else if (isInnerZodNumber) {
-      (item._def as any).innerType._def.coerce = true;
+      ;(item._def as any).innerType._def.coerce = true
     }
+    return item
+  }
 
-    return item;
-  };
-
-  const sortedFieldKeys = sortFieldsByOrder(fieldConfig, Object.keys(shape));
+  const sortedFieldKeys = sortFieldsByOrder(fieldConfig, Object.keys(shape))
 
   return (
-    <Accordion type="multiple" className="space-y-5 border-none">
+    <Accordion type='multiple' className='space-y-5 border-none'>
       {sortedFieldKeys.map((name) => {
-        let item = shape[name] as z.ZodAny;
-        item = handleIfZodNumber(item) as z.ZodAny;
-        const zodBaseType = getBaseType(item);
-        const itemName = item._def.description ?? beautifyObjectName(name);
-        const key = [...path, name].join(".");
+        let item = shape[name] as z.ZodAny
 
+        item = handleIfZodNumber(item) as z.ZodAny
+        const zodBaseType = getBaseType(item)
+        const itemName = item._def.description ?? beautifyObjectName(name)
+        const key = [...path, name].join('.')
         const {
           isHidden,
           isDisabled,
           isRequired: isRequiredByDependency,
           overrideOptions,
-        } = resolveDependencies(dependencies, name, watch);
+        } = resolveDependencies(dependencies, name, watch)
         if (isHidden) {
-          return null;
+          return null
         }
 
-        if (zodBaseType === "ZodObject") {
+        if (zodBaseType === 'ZodObject') {
           return (
-            <AccordionItem value={name} key={key} className="border-none">
+            <AccordionItem value={name} key={key} className='border-none'>
               <AccordionTrigger>{itemName}</AccordionTrigger>
-              <AccordionContent className="p-2">
+              <AccordionContent className='p-2'>
                 <AutoFormObject
                   schema={item as unknown as z.ZodObject<any, any>}
                   form={form}
@@ -101,9 +108,10 @@ export default function AutoFormObject<
                 />
               </AccordionContent>
             </AccordionItem>
-          );
+          )
         }
-        if (zodBaseType === "ZodArray") {
+
+        if (zodBaseType === 'ZodArray') {
           return (
             <AutoFormArray
               key={key}
@@ -113,19 +121,19 @@ export default function AutoFormObject<
               fieldConfig={fieldConfig?.[name] ?? {}}
               path={[...path, name]}
             />
-          );
+          )
         }
 
-        const fieldConfigItem: FieldConfigItem = fieldConfig?.[name] ?? {};
-        const zodInputProps = zodToHtmlInputProps(item);
+        const fieldConfigItem: FieldConfigItem = fieldConfig?.[name] ?? {}
+        const zodInputProps = zodToHtmlInputProps(item)
         const isRequired =
           isRequiredByDependency ||
           zodInputProps.required ||
           fieldConfigItem.inputProps?.required ||
-          false;
+          false
 
         if (overrideOptions) {
-          item = z.enum(overrideOptions) as unknown as z.ZodAny;
+          item = z.enum(overrideOptions) as unknown as z.ZodAny
         }
 
         return (
@@ -137,18 +145,18 @@ export default function AutoFormObject<
               const inputType =
                 fieldConfigItem.fieldType ??
                 DEFAULT_ZOD_HANDLERS[zodBaseType] ??
-                "fallback";
+                'fallback'
 
               const InputComponent =
-                typeof inputType === "function"
+                typeof inputType === 'function'
                   ? inputType
-                  : INPUT_COMPONENTS[inputType];
+                  : INPUT_COMPONENTS[inputType]
 
               const ParentElement =
-                fieldConfigItem.renderParent ?? DefaultParent;
+                fieldConfigItem.renderParent ?? DefaultParent
 
-              const defaultValue = fieldConfigItem.inputProps?.defaultValue;
-              const value = field.value ?? defaultValue ?? "";
+              const defaultValue = fieldConfigItem.inputProps?.defaultValue
+              const value = field.value ?? defaultValue ?? ''
 
               const fieldProps = {
                 ...zodToHtmlInputProps(item),
@@ -157,10 +165,10 @@ export default function AutoFormObject<
                 disabled: fieldConfigItem.inputProps?.disabled || isDisabled,
                 ref: undefined,
                 value: value,
-              };
+              }
 
               if (InputComponent === undefined) {
-                return <></>;
+                return <></>
               }
 
               return (
@@ -176,11 +184,11 @@ export default function AutoFormObject<
                     className={fieldProps.className}
                   />
                 </ParentElement>
-              );
+              )
             }}
           />
-        );
+        )
       })}
     </Accordion>
-  );
+  )
 }

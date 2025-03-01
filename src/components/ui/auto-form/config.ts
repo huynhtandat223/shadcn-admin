@@ -2,7 +2,7 @@ import AutoFormCheckbox from './fields/checkbox'
 import AutoFormDate from './fields/date'
 import AutoFormEnum from './fields/enum'
 import AutoFormFile from './fields/file'
-import AutoFormInput from './fields/input'
+import AutoFormInput, { AutomationActionInput } from './fields/input'
 import AutoFormNumber from './fields/number'
 import AutoFormRadioGroup from './fields/radio-group'
 import AutoFormSwitch from './fields/switch'
@@ -17,6 +17,7 @@ export const INPUT_COMPONENTS = {
   textarea: AutoFormTextarea,
   number: AutoFormNumber,
   file: AutoFormFile,
+  'automation-action': AutomationActionInput,
   fallback: AutoFormInput,
 }
 

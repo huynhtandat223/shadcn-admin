@@ -4,7 +4,7 @@ import AutoFormLabel from '../common/label'
 import AutoFormTooltip from '../common/tooltip'
 import { AutoFormInputComponentProps } from '../types'
 
-export function AutomationAction({
+export function AutomationActionInput({
   label,
   isRequired,
   fieldConfigItem,
@@ -13,8 +13,6 @@ export function AutomationAction({
   const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps
   const showLabel = _showLabel === undefined ? true : _showLabel
   const type = fieldProps.type || 'text'
-
-  console.log('fieldProps', fieldProps)
 
   return (
     <div className='flex flex-row  items-center space-x-2'>
