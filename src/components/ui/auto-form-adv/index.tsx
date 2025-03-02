@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import * as z from 'zod'
 import { create } from 'zustand'
 import AutoForm, { AutoFormSubmit } from '../auto-form'
@@ -19,14 +19,21 @@ export function AutoFormInput({ name }) {
   return <></>
 }
 
-export default function AutoFormAdv({ children }) {
-  const schema = useBearStore((state: any) => state.schema)
+export default function AutoFormAdv({ fields }) {
+  const formSchema = useMemo(() => {
+    let schema = z.object({})
 
-  const formSchema = schema.length > 0 ? schema[0] : z.object({})
+    for (const field of fields) {
+      schema = schema.extend({
+        [field.name]: z.string().optional(),
+      })
+    }
+    return schema
+  }, [fields])
 
   return (
     <AutoForm formSchema={formSchema}>
-      {children} <AutoFormSubmit />{' '}
+      <AutoFormSubmit />{' '}
     </AutoForm>
   )
 }
