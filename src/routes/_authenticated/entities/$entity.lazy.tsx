@@ -43,8 +43,12 @@ class ZodUUID extends ZodType<string, ZodTypeDef, string> {
 }
 
 export const Route = createLazyFileRoute('/_authenticated/entities/$entity')({
-  component: Test,
+  component: App,
 })
+
+function App() {
+  return <UIBuilder />
+}
 
 function Test() {
   const formSchema = z.object({
