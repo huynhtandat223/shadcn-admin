@@ -47,7 +47,6 @@ export default function AutoFormObject<
   let { shape } = getBaseSchema<SchemaType>(schema) || {}
 
   if (schema._type) {
-    console.log(path)
     const val = watch(`${path[0]}[${path[1]}]`)
     shape = schema.getShape(val)
   }

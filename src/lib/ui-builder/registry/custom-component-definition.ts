@@ -10,7 +10,6 @@ import EntityList from '@/features/tenants'
 class ZodAutoForm extends ZodType<string, ZodTypeDef, string> {
   _parse(input: z.ParseInput): z.ParseReturnType<string> {
     const { data } = input
-    console.log('data', data)
     const type = data.type || 'input'
 
     //change new type
@@ -21,9 +20,8 @@ class ZodAutoForm extends ZodType<string, ZodTypeDef, string> {
       }
     }
 
-    const t = z.object(this.currentShape)
+    const t = z.object(typeMap[this.currentType]) as z.ZodTypeAny
     const result = t.safeParse(data)
-    console.log('result', result)
     return {
       status: result.success ? 'valid' : 'aborted',
       value: result.data,
@@ -33,36 +31,12 @@ class ZodAutoForm extends ZodType<string, ZodTypeDef, string> {
 
   _type: string = 'ZodUUID'
 
-  private currentShape: any
   private currentType = ''
 
   getShape(val) {
     this.currentType = val?.type || 'input'
-    if (this.currentType)
-      this.currentShape = {
-        //default input
-        type: z.enum(['input', 'complex']),
-        name: z.string().default('inputName'),
-        isRequired: z.boolean().optional().default(false),
-      }
-
-    if (val.type === 'complex') {
-      this.currentShape = {
-        type: z.enum(['input', 'complex']),
-        name: z.string(),
-        isRequired: z.boolean().optional(),
-        nestedFields: z.array(new ZodAutoForm({})),
-      }
-    }
-
-    return this.currentShape
+    return typeMap[this.currentType]
   }
-
-  // _def: ZodTypeDef = {
-  //   schema: z.object({
-  //     type: z.enum(['goto', 'fill']),
-  //   }),
-  // }
 }
 
 export const customComponentDefinitions: ComponentRegistry = {
@@ -87,5 +61,19 @@ export const customComponentDefinitions: ComponentRegistry = {
       className: (layer) => classNameFieldOverrides(layer),
       children: (layer) => childrenFieldOverrides(layer),
     },
+  },
+}
+
+const typeMap: Record<string, unknown> = {
+  input: {
+    type: z.enum(['input', 'complex']),
+    name: z.string().default('inputName'),
+    isRequired: z.boolean().optional().default(false),
+  },
+  complex: {
+    type: z.enum(['input', 'complex']),
+    name: z.string(),
+    isRequired: z.boolean().optional(),
+    nestedFields: z.array(new ZodAutoForm({})),
   },
 }

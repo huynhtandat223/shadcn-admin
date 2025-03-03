@@ -2,27 +2,24 @@ import { useMemo } from 'react'
 import * as z from 'zod'
 import AutoForm, { AutoFormSubmit } from '../auto-form'
 
-export default function AutoFormAdv({ fields }) {
-  console.log('AutoFormAdv fields', fields)
-  const formSchema = useMemo(() => {
-    if (!fields || fields.length === 0) return z.object({})
+const typeMap: Record<string, z.ZodTypeAny> = {
+  input: z.string(),
+  complex: z.array(z.object({})),
+}
 
+export default function AutoFormAdv({ fields }) {
+  const formSchema = useMemo(() => {
     let schema = z.object({})
+    if (!fields || fields.length === 0) return schema
 
     for (const field of fields) {
-      if (field.type === 'input') {
-        schema = schema.extend({
-          [field.name]: z.string().optional(),
-        })
-      }
+      let fieldSchema = typeMap[field.type]
 
-      if (field.type === 'complex') {
-        schema = schema.extend({
-          [field.name]: z.object({
-            [field.name]: z.string().optional(),
-          }),
-        })
-      }
+      if (!field.isRequired) fieldSchema = fieldSchema.optional()
+
+      schema = schema.extend({
+        [field.name]: fieldSchema,
+      })
     }
     return schema
   }, [fields])

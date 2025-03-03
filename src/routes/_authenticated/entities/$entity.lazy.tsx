@@ -6,7 +6,6 @@ import LayerRenderer from '@/components/ui/ui-builder/layer-renderer'
 
 export class ZodUUID extends ZodType<string, ZodTypeDef, string> {
   _parse(input: z.ParseInput): z.ParseReturnType<string> {
-    console.log('ZodUUID _parse input', input)
     return {
       status: 'valid',
       value: 'test12344444444',
@@ -51,7 +50,6 @@ function App() {
 }
 
 function Test(props) {
-  console.log('Test props', props)
   const formSchema = z.object({
     name: z.string(),
     actions: z.array(new ZodUUID({})),
