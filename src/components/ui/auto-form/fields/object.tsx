@@ -48,8 +48,7 @@ export default function AutoFormObject<
 
   if (schema._type) {
     console.log(path)
-    const val = watch(`${path[0]}[${path[1]}].`)
-
+    const val = watch(`${path[0]}[${path[1]}]`)
     shape = schema.getShape(val)
   }
 
