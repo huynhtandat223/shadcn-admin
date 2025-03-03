@@ -10,29 +10,20 @@ import EntityList from '@/features/tenants'
 class ZodAutoForm extends ZodType<string, ZodTypeDef, string> {
   _parse(input: z.ParseInput): z.ParseReturnType<string> {
     const { data } = input
+    console.log('data', data)
+    const type = data.type || 'input'
 
-    let defaultData = {}
-    if (!data.type || data.type === 'input') {
-      defaultData = {
-        type: 'input',
-        name: 'inputName',
-        isRequired: false,
-      }
-    }
-
-    if (data.type === 'complex') {
-      defaultData = {
-        name: 'complexName',
-        type: 'complex',
-        isRequired: false,
-        test: 'test',
+    //change new type
+    if (type !== this.currentType) {
+      return {
+        status: 'valid',
+        value: { type: type },
       }
     }
 
     const t = z.object(this.currentShape)
-    const result = t.safeParse(defaultData)
-    console.log('ZodAutoForm _parse result', result, this.currentShape)
-
+    const result = t.safeParse(data)
+    console.log('result', result)
     return {
       status: result.success ? 'valid' : 'aborted',
       value: result.data,
@@ -43,10 +34,11 @@ class ZodAutoForm extends ZodType<string, ZodTypeDef, string> {
   _type: string = 'ZodUUID'
 
   private currentShape: any
+  private currentType = ''
 
   getShape(val) {
-    console.log('ZodAutoForm getShape val', val)
-    if (!val?.type || val.type === 'input')
+    this.currentType = val?.type || 'input'
+    if (this.currentType)
       this.currentShape = {
         //default input
         type: z.enum(['input', 'complex']),
@@ -59,7 +51,7 @@ class ZodAutoForm extends ZodType<string, ZodTypeDef, string> {
         type: z.enum(['input', 'complex']),
         name: z.string(),
         isRequired: z.boolean().optional(),
-        test: z.string().optional().default('test'),
+        nestedFields: z.array(new ZodAutoForm({})),
       }
     }
 

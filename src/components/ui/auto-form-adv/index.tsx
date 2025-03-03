@@ -10,9 +10,19 @@ export default function AutoFormAdv({ fields }) {
     let schema = z.object({})
 
     for (const field of fields) {
-      schema = schema.extend({
-        [field.name]: z.string().optional(),
-      })
+      if (field.type === 'input') {
+        schema = schema.extend({
+          [field.name]: z.string().optional(),
+        })
+      }
+
+      if (field.type === 'complex') {
+        schema = schema.extend({
+          [field.name]: z.object({
+            [field.name]: z.string().optional(),
+          }),
+        })
+      }
     }
     return schema
   }, [fields])
