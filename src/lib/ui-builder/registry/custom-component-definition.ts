@@ -1,6 +1,7 @@
 import { z, ZodType, ZodTypeDef } from 'zod'
 import { ComponentRegistry } from '@/lib/ui-builder/registry/component-registry'
 import {
+  childrenAsTextareaFieldOverrides,
   childrenFieldOverrides,
   classNameFieldOverrides,
 } from '@/lib/ui-builder/registry/form-field-overrides'
@@ -45,10 +46,11 @@ export const customComponentDefinitions: ComponentRegistry = {
     from: '@/components/ui/auto-form-adv',
     schema: z.object({
       //children: z.any().optional(),
-      fields: z.array(new ZodAutoForm({})),
+      //fields: z.array(new ZodAutoForm({})),
+      fields: z.string(),
     }),
     fieldOverrides: {
-      //children: (layer) => childrenFieldOverrides(layer),
+      fields: (layer) => childrenAsTextareaFieldOverrides(layer),
     },
   },
   EntityList: {
