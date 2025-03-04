@@ -46,7 +46,18 @@ export const Route = createLazyFileRoute('/_authenticated/entities/$entity')({
 })
 
 function App() {
-  return <UIBuilder />
+  const { pageName } = Route.useSearch()
+  console.log('page', pageName)
+  if (!pageName) {
+    return <UIBuilder />
+  }
+
+  const layerStoreStr = localStorage.getItem('layer-store')
+  const layerStore = layerStoreStr ? JSON.parse(layerStoreStr) : {}
+
+  const page = layerStore.state?.pages.find((p) => p.name === pageName)
+
+  return <LayerRenderer page={page} />
 }
 
 function Test(props) {
